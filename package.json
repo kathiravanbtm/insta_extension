@@ -1,0 +1,34 @@
+{
+  "name": "instagram-video-enhancer-pro",
+  "version": "2.0.0",
+  "description": "Advanced Instagram video enhancement with rotation, zoom, crop, fullscreen, and download features",
+  "main": "manifest.json",
+  "scripts": {
+    "build": "echo 'Extension built successfully'",
+    "test": "echo 'Open test.html in browser to test functionality'",
+    "lint": "echo 'No linting configured'",
+    "package": "zip -r instagram-video-enhancer-pro-v$(cat manifest.json | grep '\"version\"' | cut -d'\"' -f4).zip . -x '*.git*' 'node_modules/*' '*.log' 'package-lock.json'"
+  },
+  "keywords": [
+    "chrome-extension",
+    "instagram",
+    "video-enhancer",
+    "browser-extension",
+    "video-controls"
+  ],
+  "author": "Instagram Video Enhancer Pro",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "."
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {},
+  "browserslist": [
+    "Chrome >= 88",
+    "Firefox >= 109",
+    "Edge >= 88"
+  ]
+}

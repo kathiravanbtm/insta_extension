@@ -1,0 +1,396 @@
+/* Instagram Video Enhancer Pro - Styles */
+
+/* Control Panel Base Styles */
+.ive-control-panel {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 12px;
+  color: white;
+}
+
+.ive-control-panel.ive-top {
+  bottom: auto;
+  top: 10px;
+}
+
+.ive-control-panel.ive-light {
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.ive-control-panel.ive-light .ive-btn {
+  background: rgba(255, 255, 255, 0.8);
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.ive-control-panel.ive-light .ive-slider {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.ive-control-panel.ive-light .ive-slider::-webkit-slider-thumb {
+  background: #333;
+}
+
+/* Control Panel Layout */
+.ive-controls-main {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.ive-controls-left,
+.ive-controls-center,
+.ive-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.ive-controls-center {
+  justify-content: center;
+}
+
+.ive-controls-right {
+  justify-content: flex-end;
+}
+
+/* Buttons */
+.ive-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(5px);
+}
+
+.ive-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.ive-btn:active {
+  transform: scale(0.95);
+}
+
+.ive-btn.ive-play-pause {
+  font-size: 16px;
+  min-width: 40px;
+}
+
+/* Sliders */
+.ive-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  outline: none;
+  transition: background 0.2s ease;
+  cursor: pointer;
+  flex: 1;
+  max-width: 80px;
+}
+
+.ive-slider:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.ive-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.ive-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.ive-timeline {
+  max-width: 120px;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.ive-timeline::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+}
+
+/* Value Displays */
+.ive-time,
+.ive-rotation-value,
+.ive-zoom-value {
+  font-weight: 500;
+  min-width: 60px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Advanced Controls */
+.ive-controls-advanced {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ive-position-controls,
+.ive-filter-controls {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.ive-position-controls label,
+.ive-filter-controls label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.ive-position-controls .ive-slider,
+.ive-filter-controls .ive-slider {
+  max-width: 60px;
+}
+
+/* Enhance Button */
+.ive-enhance-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 9999;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.ive-enhance-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.ive-enhance-btn:active {
+  transform: translateY(0);
+}
+
+/* Crop Rectangle */
+.ive-crop-rect {
+  position: absolute;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Video Enhancements */
+video {
+  transition: transform 0.3s ease, filter 0.3s ease, clip-path 0.3s ease;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ive-control-panel {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .ive-controls-main {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ive-controls-left,
+  .ive-controls-center,
+  .ive-controls-right {
+    justify-content: center;
+  }
+
+  .ive-btn {
+    padding: 4px 6px;
+    min-width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .ive-slider {
+    max-width: 60px;
+  }
+
+  .ive-timeline {
+    max-width: 100px;
+  }
+
+  .ive-controls-advanced {
+    gap: 8px;
+  }
+
+  .ive-position-controls,
+  .ive-filter-controls {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* Fullscreen Styles */
+:fullscreen .ive-control-panel {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 99999;
+}
+
+:fullscreen video {
+  object-fit: contain !important;
+}
+
+/* Animation Classes */
+.ive-fade-in {
+  animation: iveFadeIn 0.3s ease;
+}
+
+@keyframes iveFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ive-slide-up {
+  animation: iveSlideUp 0.3s ease;
+}
+
+@keyframes iveSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading States */
+.ive-btn.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.ive-btn.loading::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: iveSpin 1s linear infinite;
+  margin-left: 5px;
+}
+
+@keyframes iveSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error States */
+.ive-btn.error {
+  background: rgba(244, 67, 54, 0.8);
+  border-color: rgba(244, 67, 54, 1);
+}
+
+.ive-btn.success {
+  background: rgba(76, 175, 80, 0.8);
+  border-color: rgba(76, 175, 80, 1);
+}
+
+/* Dark Mode Enhancements */
+@media (prefers-color-scheme: dark) {
+  .ive-control-panel {
+    background: rgba(0, 0, 0, 0.9);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .ive-control-panel {
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid white;
+  }
+
+  .ive-btn {
+    border: 2px solid white;
+    background: black;
+    color: white;
+  }
+
+  .ive-slider {
+    background: white;
+  }
+
+  .ive-slider::-webkit-slider-thumb {
+    background: black;
+    border: 2px solid white;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .ive-control-panel,
+  .ive-btn,
+  .ive-slider,
+  video {
+    transition: none;
+  }
+
+  .ive-fade-in,
+  .ive-slide-up {
+    animation: none;
+  }
+}
