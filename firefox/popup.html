@@ -87,6 +87,33 @@
           <option value="light">Light</option>
         </select>
       </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Control panel opacity</div>
+          <div class="setting-desc">Transparency of the control panel</div>
+        </div>
+        <input type="range" class="slider-control" id="controlOpacity" min="0.3" max="1" step="0.1" value="0.85" />
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Control panel size</div>
+          <div class="setting-desc">Size of the control panel</div>
+        </div>
+        <select class="select-control" id="controlSize">
+          <option value="normal">Normal</option>
+          <option value="compact">Compact</option>
+        </select>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Show advanced controls</div>
+          <div class="setting-desc">Display position and filter controls</div>
+        </div>
+        <div class="toggle active" id="showAdvanced"></div>
+      </div>
     </div>
   </div>
 

@@ -1,4 +1,8 @@
 // Instagram Video Enhancer Pro - Content Script
+
+// Browser API compatibility
+var browser = typeof browser !== 'undefined' ? browser : chrome;
+
 class InstagramVideoEnhancer {
   constructor() {
     this.enhancedVideos = new Map();
@@ -6,6 +10,7 @@ class InstagramVideoEnhancer {
     this.activeVideo = null;
     this.fullscreenMouseMoveHandler = null;
     this.fullscreenHideTimeout = null;
+    this.fullscreenShowControls = null;
     this.init();
   }
 
@@ -18,18 +23,26 @@ class InstagramVideoEnhancer {
   }
 
   async loadSettings() {
+    const defaults = {
+      autoEnhance: true,
+      enableKeyboardShortcuts: true,
+      defaultZoom: 100,
+      defaultRotation: 0,
+      showControls: true,
+      enableDownload: true,
+      controlPosition: 'bottom',
+      theme: 'dark',
+      controlOpacity: 0.85,
+      controlSize: 'normal',
+      showAdvanced: true
+    };
     return new Promise((resolve) => {
-      chrome.storage.sync.get({
-        autoEnhance: true,
-        enableKeyboardShortcuts: true,
-        defaultZoom: 100,
-        defaultRotation: 0,
-        showControls: true,
-        enableDownload: true,
-        controlPosition: 'bottom',
-        theme: 'dark'
-      }, (settings) => {
-        this.settings = settings;
+      browser.storage.sync.get(defaults, (settings) => {
+        if (browser.runtime.lastError) {
+          this.settings = defaults;
+        } else {
+          this.settings = settings;
+        }
         resolve();
       });
     });
@@ -115,7 +128,8 @@ class InstagramVideoEnhancer {
 
     // Create main control panel
     const controlPanel = document.createElement('div');
-    controlPanel.className = `ive-control-panel ive-${this.settings.controlPosition} ive-${this.settings.theme}`;
+    controlPanel.className = `ive-control-panel ive-${this.settings.controlPosition} ive-${this.settings.theme} ive-${this.settings.controlSize}`;
+    controlPanel.style.background = `rgba(0, 0, 0, ${this.settings.controlOpacity})`;
 
     controlPanel.innerHTML = `
       <div class="ive-controls-main">
@@ -140,7 +154,7 @@ class InstagramVideoEnhancer {
           <button class="ive-btn ive-settings" title="Settings">⚙️</button>
         </div>
       </div>
-      <div class="ive-controls-advanced" style="display: none;">
+      <div class="ive-controls-advanced" style="display: ${this.settings.showAdvanced ? 'flex' : 'none'};">
         <div class="ive-position-controls">
           <label>X: <input type="range" class="ive-slider ive-pos-x" min="-200" max="200" value="0" /></label>
           <label>Y: <input type="range" class="ive-slider ive-pos-y" min="-200" max="200" value="0" /></label>
@@ -388,28 +402,45 @@ class InstagramVideoEnhancer {
         videoData.isFullscreen = true;
         video.style.objectFit = 'contain';
 
-        // Make controls always visible in fullscreen and show on mouse move
+        // Use mousemove-based behavior for fullscreen
         if (controlPanel) {
-          controlPanel.style.opacity = '1';
-          controlPanel.style.pointerEvents = 'auto';
           controlPanel.classList.add('ive-fullscreen-mode');
 
-          // Add mousemove listener to show controls on any mouse movement
-          this.fullscreenMouseMoveHandler = () => {
+          // Initially hide controls
+          controlPanel.style.opacity = '0';
+          controlPanel.style.pointerEvents = 'none';
+
+          // Show controls on mouse movement, hide after delay
+          this.fullscreenShowControls = () => {
             controlPanel.style.opacity = '1';
             controlPanel.style.pointerEvents = 'auto';
             clearTimeout(this.fullscreenHideTimeout);
             this.fullscreenHideTimeout = setTimeout(() => {
-              if (videoData.isFullscreen) {
+              if (videoData.isFullscreen && !videoData.controlsVisible) {
                 controlPanel.style.opacity = '0';
                 controlPanel.style.pointerEvents = 'none';
               }
-            }, 3000); // Hide after 3 seconds of no movement
+            }, 2000); // Hide after 2 seconds of no movement
           };
 
-          document.addEventListener('mousemove', this.fullscreenMouseMoveHandler);
-          // Trigger initially
-          this.fullscreenMouseMoveHandler();
+          // Add mousemove listener to document
+          document.addEventListener('mousemove', this.fullscreenShowControls);
+          
+          // Also show on control panel hover
+          controlPanel.addEventListener('mouseenter', () => {
+            clearTimeout(this.fullscreenHideTimeout);
+            controlPanel.style.opacity = '1';
+            controlPanel.style.pointerEvents = 'auto';
+          });
+          
+          controlPanel.addEventListener('mouseleave', () => {
+            this.fullscreenHideTimeout = setTimeout(() => {
+              if (videoData.isFullscreen && !videoData.controlsVisible) {
+                controlPanel.style.opacity = '0';
+                controlPanel.style.pointerEvents = 'none';
+              }
+            }, 2000);
+          });
         }
 
         setTimeout(() => this.applyTransform(video), 100);
@@ -426,18 +457,18 @@ class InstagramVideoEnhancer {
         videoData.isFullscreen = false;
         video.style.objectFit = '';
 
-        // Remove fullscreen mousemove listener
-        if (this.fullscreenMouseMoveHandler) {
-          document.removeEventListener('mousemove', this.fullscreenMouseMoveHandler);
-          this.fullscreenMouseMoveHandler = null;
-          clearTimeout(this.fullscreenHideTimeout);
+        // Remove fullscreen event listeners
+        if (this.fullscreenShowControls) {
+          document.removeEventListener('mousemove', this.fullscreenShowControls);
+          this.fullscreenShowControls = null;
         }
+        clearTimeout(this.fullscreenHideTimeout);
 
-        // Restore hover behavior when exiting fullscreen
+        // Restore normal hover behavior
         if (controlPanel) {
+          controlPanel.classList.remove('ive-fullscreen-mode');
           controlPanel.style.opacity = '0';
           controlPanel.style.pointerEvents = 'none';
-          controlPanel.classList.remove('ive-fullscreen-mode');
         }
 
         setTimeout(() => this.applyTransform(video), 100);
@@ -453,7 +484,7 @@ class InstagramVideoEnhancer {
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     const filename = `instagram-video-${timestamp}.mp4`;
 
-    chrome.runtime.sendMessage({
+    browser.runtime.sendMessage({
       action: 'downloadVideo',
       url: url,
       filename: filename
@@ -520,7 +551,7 @@ class InstagramVideoEnhancer {
     });
 
     // Handle messages from background script
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
       switch (request.action) {
         case 'enhanceCurrentVideo':
           const activeVideo = this.getActiveVideo();
@@ -530,6 +561,10 @@ class InstagramVideoEnhancer {
           break;
         case 'toggleControls':
           this.toggleAllControls();
+          break;
+        case 'settingsUpdated':
+          Object.assign(this.settings, request);
+          this.updateControlPanels();
           break;
       }
     });
@@ -603,6 +638,28 @@ class InstagramVideoEnhancer {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  updateControlPanels() {
+    this.enhancedVideos.forEach((videoData, video) => {
+      const container = video.closest('article, div[role="presentation"]') || video.parentElement;
+      if (!container) return;
+
+      const controlPanel = container.querySelector('.ive-control-panel');
+      if (controlPanel) {
+        // Update classes
+        controlPanel.className = `ive-control-panel ive-${this.settings.controlPosition} ive-${this.settings.theme} ive-${this.settings.controlSize}`;
+
+        // Update opacity
+        controlPanel.style.background = `rgba(0, 0, 0, ${this.settings.controlOpacity})`;
+
+        // Update advanced controls visibility
+        const advancedControls = controlPanel.querySelector('.ive-controls-advanced');
+        if (advancedControls) {
+          advancedControls.style.display = this.settings.showAdvanced ? 'flex' : 'none';
+        }
+      }
+    });
   }
 }
 

@@ -3,20 +3,23 @@
 /* Control Panel Base Styles */
 .ive-control-panel {
   position: absolute;
-  bottom: 10px;
-  left: 10px;
-  right: 10px;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
   z-index: 10000;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.2s ease;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   color: white;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .ive-control-panel.ive-top {
@@ -44,12 +47,41 @@
   background: #333;
 }
 
+.ive-control-panel.ive-compact {
+  padding: 4px;
+  font-size: 10px;
+}
+
+.ive-control-panel.ive-compact .ive-btn {
+  min-width: 20px;
+  height: 20px;
+  padding: 2px 3px;
+  font-size: 10px;
+}
+
+.ive-control-panel.ive-compact .ive-slider {
+  max-width: 50px;
+  height: 3px;
+}
+
+.ive-control-panel.ive-compact .ive-timeline {
+  max-width: 80px;
+}
+
+.ive-control-panel.ive-compact .ive-time,
+.ive-control-panel.ive-compact .ive-rotation-value,
+.ive-control-panel.ive-compact .ive-zoom-value {
+  font-size: 10px;
+  min-width: 50px;
+}
+
 /* Control Panel Layout */
 .ive-controls-main {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
   flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .ive-controls-left,
@@ -57,16 +89,18 @@
 .ive-controls-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
 }
 
 .ive-controls-center {
   justify-content: center;
+  flex: 0 0 auto;
 }
 
 .ive-controls-right {
   justify-content: flex-end;
+  flex: 0 0 auto;
 }
 
 /* Buttons */
@@ -74,26 +108,31 @@
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
-  border-radius: 6px;
-  padding: 6px 8px;
+  border-radius: 4px;
+  padding: 4px 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 14px;
-  min-width: 32px;
-  height: 32px;
+  transition: all 0.15s ease;
+  font-size: 12px;
+  min-width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  font-weight: 500;
 }
 
 .ive-btn:hover {
   background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .ive-btn:active {
-  transform: scale(0.95);
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .ive-btn.ive-play-pause {
@@ -231,12 +270,14 @@ video {
 /* Responsive Design */
 @media (max-width: 768px) {
   .ive-control-panel {
-    padding: 8px;
-    gap: 8px;
+    padding: 6px;
+    font-size: 10px;
+    bottom: 6px;
+    left: 6px;
+    right: 6px;
   }
 
   .ive-controls-main {
-    flex-direction: column;
     gap: 8px;
   }
 
@@ -247,10 +288,10 @@ video {
   }
 
   .ive-btn {
-    padding: 4px 6px;
-    min-width: 28px;
-    height: 28px;
-    font-size: 12px;
+    min-width: 24px;
+    height: 24px;
+    padding: 2px 4px;
+    font-size: 11px;
   }
 
   .ive-slider {
@@ -274,11 +315,14 @@ video {
 
 /* Fullscreen Styles */
 :fullscreen .ive-control-panel {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  right: 20px;
-  z-index: 99999;
+  position: fixed !important;
+  bottom: 16px !important;
+  left: 16px !important;
+  right: 16px !important;
+  z-index: 99999 !important;
+  pointer-events: auto !important;
+  padding: 6px;
+  font-size: 10px;
 }
 
 :fullscreen video {
@@ -393,24 +437,4 @@ video {
   .ive-slide-up {
     animation: none;
   }
-}
-
-/* Fullscreen Styles */
-:fullscreen .ive-control-panel {
-  position: fixed !important;
-  bottom: 20px !important;
-  left: 20px !important;
-  right: 20px !important;
-  z-index: 99999 !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-}
-
-.ive-control-panel.ive-fullscreen-mode {
-  opacity: 1 !important;
-  pointer-events: auto !important;
-}
-
-:fullscreen video {
-  object-fit: contain !important;
 }
