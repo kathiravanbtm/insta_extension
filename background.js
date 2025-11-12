@@ -1,6 +1,6 @@
-// Instagram Video Enhancer Pro - Background Script
+// Instagram fullscreen viewer - Background Script
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('Instagram Video Enhancer Pro installed');
+  console.log('Instagram fullscreen viewer extension installed.');
 
   // Set default settings
   chrome.storage.sync.set({
@@ -21,8 +21,8 @@ chrome.runtime.onInstalled.addListener(() => {
 
 function createContextMenu() {
   chrome.contextMenus.create({
-    id: 'enhanceVideo',
-    title: 'Enhance Instagram Video',
+    id: 'fullscreenViewer',
+    title: 'Instagram fullscreen viewer',
     contexts: ['video'],
     documentUrlPatterns: [
       'https://www.instagram.com/*',
@@ -54,8 +54,8 @@ function createContextMenu() {
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   switch (info.menuItemId) {
-    case 'enhanceVideo':
-      chrome.tabs.sendMessage(tab.id, { action: 'enhanceCurrentVideo' });
+    case 'fullscreenViewer':
+      chrome.tabs.sendMessage(tab.id, { action: 'fullscreenCurrentVideo' });
       break;
     case 'toggleControls':
       chrome.tabs.sendMessage(tab.id, { action: 'toggleControls' });
@@ -152,7 +152,7 @@ function getExtensionStats(sendResponse) {
 chrome.action.onClicked.addListener((tab) => {
   // Open popup or perform quick action
   if (tab.url && tab.url.includes('instagram.com')) {
-    chrome.tabs.sendMessage(tab.id, { action: 'enhanceCurrentVideo' });
+    chrome.tabs.sendMessage(tab.id, { action: 'fullscreenViewer' });
   }
 });
 

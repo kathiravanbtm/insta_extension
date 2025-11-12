@@ -1,5 +1,5 @@
-// Instagram Video Enhancer Pro - Content Script
-class InstagramVideoEnhancer {
+// Instagram fullscreen viewer - Content Script
+class InstagramFullscreenViewer {
   constructor() {
     this.enhancedVideos = new Map();
     this.settings = {};
@@ -10,7 +10,7 @@ class InstagramVideoEnhancer {
   }
 
   async init() {
-    console.log('Instagram Video Enhancer Pro initialized');
+    console.log('Instagram fullscreen viewer initialized');
     await this.loadSettings();
     this.addVideoObserver();
     this.setupKeyboardShortcuts();
@@ -113,34 +113,66 @@ class InstagramVideoEnhancer {
     const container = video.closest('article, div[role="presentation"]') || video.parentElement;
     if (!container) return;
 
+    // Detect container/video size for responsive layout
+    const containerRect = container.getBoundingClientRect();
+    const videoRect = video.getBoundingClientRect();
+    const effectiveWidth = Math.min(containerRect.width, videoRect.width);
+    const effectiveHeight = Math.min(containerRect.height, videoRect.height);
+
+    // Determine size class based on effective dimensions
+    let sizeClass = 'medium'; // default
+    if (effectiveWidth < 300 || effectiveHeight < 200) {
+      sizeClass = 'small';
+    } else if (effectiveWidth > 600 && effectiveHeight > 400) {
+      sizeClass = 'large';
+    }
+
+    // Determine aspect ratio class
+    const aspectRatio = effectiveWidth / effectiveHeight;
+    let aspectClass = '';
+    if (aspectRatio > 1.5) {
+      aspectClass = 'ive-landscape';
+    } else if (aspectRatio < 0.8) {
+      aspectClass = 'ive-portrait';
+    }
+
+    // Check if this is Instagram Reels
+    const isReels = window.location.pathname.includes('/reels/') || 
+                    container.closest('section[role="main"]')?.querySelector('div[style*="height: 100vh"]');
+    const reelsClass = isReels ? 'ive-reels' : '';
+
     // Create main control panel
     const controlPanel = document.createElement('div');
-    controlPanel.className = `ive-control-panel ive-${this.settings.controlPosition} ive-${this.settings.theme}`;
+    controlPanel.className = `ive-control-panel ive-${this.settings.controlPosition} ive-${this.settings.theme} ive-size-${sizeClass} ${aspectClass} ${reelsClass}`.trim();
+
+    // Adjust HTML structure based on size
+    const isSmall = sizeClass === 'small';
+    const isLarge = sizeClass === 'large';
 
     controlPanel.innerHTML = `
       <div class="ive-controls-main">
         <div class="ive-controls-left">
           <button class="ive-btn ive-play-pause" title="Play/Pause">▶️</button>
-          <input type="range" class="ive-slider ive-timeline" min="0" max="100" value="0" />
-          <span class="ive-time">0:00 / 0:00</span>
+          ${!isSmall ? `<input type="range" class="ive-slider ive-timeline" min="0" max="100" value="0" />
+          <span class="ive-time">0:00 / 0:00</span>` : ''}
         </div>
         <div class="ive-controls-center">
-          <button class="ive-btn ive-rotate-left" title="Rotate Left">↺</button>
-          <input type="range" class="ive-slider ive-rotation" min="0" max="270" step="90" value="0" />
-          <span class="ive-rotation-value">0°</span>
-          <button class="ive-btn ive-rotate-right" title="Rotate Right">↻</button>
+          ${!isSmall ? `<button class="ive-btn ive-rotate-left" title="Rotate Left">↺</button>` : ''}
+          <input type="range" class="ive-slider ive-rotation ${isSmall ? 'ive-compact' : ''}" min="0" max="270" step="90" value="0" />
+          ${!isSmall ? `<span class="ive-rotation-value">0°</span>
+          <button class="ive-btn ive-rotate-right" title="Rotate Right">↻</button>` : ''}
         </div>
         <div class="ive-controls-right">
-          <button class="ive-btn ive-zoom-out" title="Zoom Out">🔍-</button>
-          <input type="range" class="ive-slider ive-zoom" min="25" max="400" value="100" />
-          <span class="ive-zoom-value">100%</span>
-          <button class="ive-btn ive-zoom-in" title="Zoom In">🔍+</button>
+          ${!isSmall ? `<button class="ive-btn ive-zoom-out" title="Zoom Out">🔍-</button>` : ''}
+          <input type="range" class="ive-slider ive-zoom ${isSmall ? 'ive-compact' : ''}" min="25" max="400" value="100" />
+          ${!isSmall ? `<span class="ive-zoom-value">100%</span>
+          <button class="ive-btn ive-zoom-in" title="Zoom In">🔍+</button>` : ''}
           <button class="ive-btn ive-fullscreen" title="Fullscreen">⛶</button>
-          <button class="ive-btn ive-download" title="Download">⬇️</button>
-          <button class="ive-btn ive-settings" title="Settings">⚙️</button>
+          ${isLarge ? `<button class="ive-btn ive-download" title="Download">⬇️</button>
+          <button class="ive-btn ive-settings" title="Settings">⚙️</button>` : ''}
         </div>
       </div>
-      <div class="ive-controls-advanced" style="display: none;">
+      ${isLarge ? `<div class="ive-controls-advanced" style="display: none;">
         <div class="ive-position-controls">
           <label>X: <input type="range" class="ive-slider ive-pos-x" min="-200" max="200" value="0" /></label>
           <label>Y: <input type="range" class="ive-slider ive-pos-y" min="-200" max="200" value="0" /></label>
@@ -150,7 +182,7 @@ class InstagramVideoEnhancer {
           <label>Contrast: <input type="range" class="ive-slider ive-contrast" min="0" max="200" value="100" /></label>
           <label>Saturation: <input type="range" class="ive-slider ive-saturation" min="0" max="200" value="100" /></label>
         </div>
-      </div>
+      </div>` : ''}
     `;
 
     // Position the control panel
@@ -159,6 +191,14 @@ class InstagramVideoEnhancer {
     }
 
     container.appendChild(controlPanel);
+
+    // Store references for cleanup
+    const videoData = this.enhancedVideos.get(video);
+    videoData.controlPanel = controlPanel;
+    videoData.container = container;
+
+    // Add resize observer for dynamic responsiveness
+    this.addResizeObserver(video, controlPanel);
 
     // Initially hide controls
     controlPanel.style.opacity = '0';
@@ -187,6 +227,127 @@ class InstagramVideoEnhancer {
     container.addEventListener('mouseleave', hideControls);
     controlPanel.addEventListener('mouseenter', showControls);
     controlPanel.addEventListener('mouseleave', hideControls);
+  }
+
+  addResizeObserver(video, controlPanel) {
+    // Create a resize observer to update control panel size dynamically
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        // Debounce the resize handling
+        clearTimeout(this.resizeTimeout);
+        this.resizeTimeout = setTimeout(() => {
+          this.updateControlPanelSize(video, controlPanel);
+        }, 100);
+      }
+    });
+
+    // Observe the video element and its container
+    const container = video.closest('article, div[role="presentation"]') || video.parentElement;
+    if (container) {
+      resizeObserver.observe(container);
+    }
+    resizeObserver.observe(video);
+
+    // Store the observer for cleanup
+    const videoData = this.enhancedVideos.get(video);
+    if (videoData) {
+      videoData.resizeObserver = resizeObserver;
+    }
+  }
+
+  updateControlPanelSize(video, controlPanel) {
+    const container = video.closest('article, div[role="presentation"]') || video.parentElement;
+    if (!container || !controlPanel) return;
+
+    // Recalculate size class
+    const containerRect = container.getBoundingClientRect();
+    const videoRect = video.getBoundingClientRect();
+    const effectiveWidth = Math.min(containerRect.width, videoRect.width);
+    const effectiveHeight = Math.min(containerRect.height, videoRect.height);
+
+    let newSizeClass = 'medium'; // default
+    if (effectiveWidth < 300 || effectiveHeight < 200) {
+      newSizeClass = 'small';
+    } else if (effectiveWidth > 600 && effectiveHeight > 400) {
+      newSizeClass = 'large';
+    }
+
+    // Recalculate aspect ratio class
+    const aspectRatio = effectiveWidth / effectiveHeight;
+    let newAspectClass = '';
+    if (aspectRatio > 1.5) {
+      newAspectClass = 'ive-landscape';
+    } else if (aspectRatio < 0.8) {
+      newAspectClass = 'ive-portrait';
+    }
+
+    // Update classes
+    controlPanel.classList.remove('ive-size-small', 'ive-size-medium', 'ive-size-large');
+    controlPanel.classList.add(`ive-size-${newSizeClass}`);
+
+    controlPanel.classList.remove('ive-landscape', 'ive-portrait');
+    if (newAspectClass) {
+      controlPanel.classList.add(newAspectClass);
+    }
+
+    // Update HTML content based on new size
+    const isSmall = newSizeClass === 'small';
+    const isLarge = newSizeClass === 'large';
+
+    const controlsMain = controlPanel.querySelector('.ive-controls-main');
+    if (controlsMain) {
+      controlsMain.innerHTML = `
+        <div class="ive-controls-left">
+          <button class="ive-btn ive-play-pause" title="Play/Pause">▶️</button>
+          ${!isSmall ? `<input type="range" class="ive-slider ive-timeline" min="0" max="100" value="0" />
+          <span class="ive-time">0:00 / 0:00</span>` : ''}
+        </div>
+        <div class="ive-controls-center">
+          ${!isSmall ? `<button class="ive-btn ive-rotate-left" title="Rotate Left">↺</button>` : ''}
+          <input type="range" class="ive-slider ive-rotation ${isSmall ? 'ive-compact' : ''}" min="0" max="270" step="90" value="0" />
+          ${!isSmall ? `<span class="ive-rotation-value">0°</span>
+          <button class="ive-btn ive-rotate-right" title="Rotate Right">↻</button>` : ''}
+        </div>
+        <div class="ive-controls-right">
+          ${!isSmall ? `<button class="ive-btn ive-zoom-out" title="Zoom Out">🔍-</button>` : ''}
+          <input type="range" class="ive-slider ive-zoom ${isSmall ? 'ive-compact' : ''}" min="25" max="400" value="100" />
+          ${!isSmall ? `<span class="ive-zoom-value">100%</span>
+          <button class="ive-btn ive-zoom-in" title="Zoom In">🔍+</button>` : ''}
+          <button class="ive-btn ive-fullscreen" title="Fullscreen">⛶</button>
+          ${isLarge ? `<button class="ive-btn ive-download" title="Download">⬇️</button>
+          <button class="ive-btn ive-settings" title="Settings">⚙️</button>` : ''}
+        </div>
+      `;
+
+      // Re-bind events for the new elements
+      this.bindVideoEvents(video);
+    }
+
+    // Handle advanced controls
+    let advancedPanel = controlPanel.querySelector('.ive-controls-advanced');
+    if (isLarge && !advancedPanel) {
+      // Add advanced controls if they don't exist
+      const newAdvancedPanel = document.createElement('div');
+      newAdvancedPanel.className = 'ive-controls-advanced';
+      newAdvancedPanel.style.display = 'none';
+      newAdvancedPanel.innerHTML = `
+        <div class="ive-position-controls">
+          <label>X: <input type="range" class="ive-slider ive-pos-x" min="-200" max="200" value="0" /></label>
+          <label>Y: <input type="range" class="ive-slider ive-pos-y" min="-200" max="200" value="0" /></label>
+        </div>
+        <div class="ive-filter-controls">
+          <label>Brightness: <input type="range" class="ive-slider ive-brightness" min="0" max="200" value="100" /></label>
+          <label>Contrast: <input type="range" class="ive-slider ive-contrast" min="0" max="200" value="100" /></label>
+          <label>Saturation: <input type="range" class="ive-slider ive-saturation" min="0" max="200" value="100" /></label>
+        </div>
+      `;
+      controlPanel.appendChild(newAdvancedPanel);
+      // Re-bind events for advanced controls
+      this.bindVideoEvents(video);
+    } else if (!isLarge && advancedPanel) {
+      // Remove advanced controls if they exist
+      advancedPanel.remove();
+    }
   }
 
   bindVideoEvents(video) {
@@ -220,128 +381,160 @@ class InstagramVideoEnhancer {
     const saturation = controlPanel.querySelector('.ive-saturation');
 
     // Play/Pause
-    playPauseBtn.addEventListener('click', () => {
-      if (video.paused) {
-        video.play();
-        playPauseBtn.innerHTML = '⏸️';
-      } else {
-        video.pause();
-        playPauseBtn.innerHTML = '▶️';
-      }
-    });
+    if (playPauseBtn) {
+      playPauseBtn.addEventListener('click', () => {
+        if (video.paused) {
+          video.play();
+          playPauseBtn.innerHTML = '⏸️';
+        } else {
+          video.pause();
+          playPauseBtn.innerHTML = '▶️';
+        }
+      });
+    }
 
     video.addEventListener('play', () => {
-      playPauseBtn.innerHTML = '⏸️';
+      if (playPauseBtn) playPauseBtn.innerHTML = '⏸️';
     });
 
     video.addEventListener('pause', () => {
-      playPauseBtn.innerHTML = '▶️';
+      if (playPauseBtn) playPauseBtn.innerHTML = '▶️';
     });
 
     // Timeline
     video.addEventListener('timeupdate', () => {
       if (video.duration) {
         const progress = (video.currentTime / video.duration) * 100;
-        timeline.value = progress;
-        timeDisplay.textContent = `${this.formatTime(video.currentTime)} / ${this.formatTime(video.duration)}`;
+        if (timeline) timeline.value = progress;
+        if (timeDisplay) timeDisplay.textContent = `${this.formatTime(video.currentTime)} / ${this.formatTime(video.duration)}`;
       }
     });
 
-    timeline.addEventListener('input', () => {
-      if (video.duration) {
-        video.currentTime = (timeline.value / 100) * video.duration;
-      }
-    });
+    if (timeline) {
+      timeline.addEventListener('input', () => {
+        if (video.duration) {
+          video.currentTime = (timeline.value / 100) * video.duration;
+        }
+      });
+    }
 
     // Rotation
-    rotateLeftBtn.addEventListener('click', () => {
-      videoData.rotation = (videoData.rotation - 90) % 360;
-      if (videoData.rotation < 0) videoData.rotation += 360;
-      rotationSlider.value = videoData.rotation;
-      rotationValue.textContent = `${videoData.rotation}°`;
-      this.applyTransform(video);
-    });
+    if (rotateLeftBtn) {
+      rotateLeftBtn.addEventListener('click', () => {
+        videoData.rotation = (videoData.rotation - 90) % 360;
+        if (videoData.rotation < 0) videoData.rotation += 360;
+        if (rotationSlider) rotationSlider.value = videoData.rotation;
+        if (rotationValue) rotationValue.textContent = `${videoData.rotation}°`;
+        this.applyTransform(video);
+      });
+    }
 
-    rotateRightBtn.addEventListener('click', () => {
-      videoData.rotation = (videoData.rotation + 90) % 360;
-      rotationSlider.value = videoData.rotation;
-      rotationValue.textContent = `${videoData.rotation}°`;
-      this.applyTransform(video);
-    });
+    if (rotateRightBtn) {
+      rotateRightBtn.addEventListener('click', () => {
+        videoData.rotation = (videoData.rotation + 90) % 360;
+        if (rotationSlider) rotationSlider.value = videoData.rotation;
+        if (rotationValue) rotationValue.textContent = `${videoData.rotation}°`;
+        this.applyTransform(video);
+      });
+    }
 
-    rotationSlider.addEventListener('input', () => {
-      videoData.rotation = parseInt(rotationSlider.value);
-      rotationValue.textContent = `${videoData.rotation}°`;
-      this.applyTransform(video);
-    });
+    if (rotationSlider) {
+      rotationSlider.addEventListener('input', () => {
+        videoData.rotation = parseInt(rotationSlider.value);
+        if (rotationValue) rotationValue.textContent = `${videoData.rotation}°`;
+        this.applyTransform(video);
+      });
+    }
 
     // Zoom
-    zoomOutBtn.addEventListener('click', () => {
-      videoData.scale = Math.max(25, videoData.scale - 25);
-      zoomSlider.value = videoData.scale;
-      zoomValue.textContent = `${videoData.scale}%`;
-      this.applyTransform(video);
-    });
+    if (zoomOutBtn) {
+      zoomOutBtn.addEventListener('click', () => {
+        videoData.scale = Math.max(25, videoData.scale - 25);
+        if (zoomSlider) zoomSlider.value = videoData.scale;
+        if (zoomValue) zoomValue.textContent = `${videoData.scale}%`;
+        this.applyTransform(video);
+      });
+    }
 
-    zoomInBtn.addEventListener('click', () => {
-      videoData.scale = Math.min(400, videoData.scale + 25);
-      zoomSlider.value = videoData.scale;
-      zoomValue.textContent = `${videoData.scale}%`;
-      this.applyTransform(video);
-    });
+    if (zoomInBtn) {
+      zoomInBtn.addEventListener('click', () => {
+        videoData.scale = Math.min(400, videoData.scale + 25);
+        if (zoomSlider) zoomSlider.value = videoData.scale;
+        if (zoomValue) zoomValue.textContent = `${videoData.scale}%`;
+        this.applyTransform(video);
+      });
+    }
 
-    zoomSlider.addEventListener('input', () => {
-      videoData.scale = parseInt(zoomSlider.value);
-      zoomValue.textContent = `${videoData.scale}%`;
-      this.applyTransform(video);
-    });
+    if (zoomSlider) {
+      zoomSlider.addEventListener('input', () => {
+        videoData.scale = parseInt(zoomSlider.value);
+        if (zoomValue) zoomValue.textContent = `${videoData.scale}%`;
+        this.applyTransform(video);
+      });
+    }
 
     // Position
-    posX.addEventListener('input', () => {
-      videoData.x = parseInt(posX.value);
-      this.applyTransform(video);
-    });
+    if (posX) {
+      posX.addEventListener('input', () => {
+        videoData.x = parseInt(posX.value);
+        this.applyTransform(video);
+      });
+    }
 
-    posY.addEventListener('input', () => {
-      videoData.y = parseInt(posY.value);
-      this.applyTransform(video);
-    });
+    if (posY) {
+      posY.addEventListener('input', () => {
+        videoData.y = parseInt(posY.value);
+        this.applyTransform(video);
+      });
+    }
 
     // Filters
-    brightness.addEventListener('input', () => {
-      this.applyFilters(video);
-    });
+    if (brightness) {
+      brightness.addEventListener('input', () => {
+        this.applyFilters(video);
+      });
+    }
 
-    contrast.addEventListener('input', () => {
-      this.applyFilters(video);
-    });
+    if (contrast) {
+      contrast.addEventListener('input', () => {
+        this.applyFilters(video);
+      });
+    }
 
-    saturation.addEventListener('input', () => {
-      this.applyFilters(video);
-    });
+    if (saturation) {
+      saturation.addEventListener('input', () => {
+        this.applyFilters(video);
+      });
+    }
 
     // Fullscreen
-    fullscreenBtn.addEventListener('click', () => {
-      this.toggleFullscreen(video);
-    });
+    if (fullscreenBtn) {
+      fullscreenBtn.addEventListener('click', () => {
+        this.toggleFullscreen(video);
+      });
+    }
 
     // Download
-    downloadBtn.addEventListener('click', () => {
-      this.downloadVideo(video);
-    });
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', () => {
+        this.downloadVideo(video);
+      });
+    }
 
     // Settings
-    settingsBtn.addEventListener('click', () => {
-      advancedPanel.style.display = advancedPanel.style.display === 'none' ? 'block' : 'none';
-    });
+    if (settingsBtn && advancedPanel) {
+      settingsBtn.addEventListener('click', () => {
+        advancedPanel.style.display = advancedPanel.style.display === 'none' ? 'block' : 'none';
+      });
+    }
 
     // Set initial values
-    rotationSlider.value = videoData.rotation;
-    rotationValue.textContent = `${videoData.rotation}°`;
-    zoomSlider.value = videoData.scale;
-    zoomValue.textContent = `${videoData.scale}%`;
-    posX.value = videoData.x;
-    posY.value = videoData.y;
+    if (rotationSlider) rotationSlider.value = videoData.rotation;
+    if (rotationValue) rotationValue.textContent = `${videoData.rotation}°`;
+    if (zoomSlider) zoomSlider.value = videoData.scale;
+    if (zoomValue) zoomValue.textContent = `${videoData.scale}%`;
+    if (posX) posX.value = videoData.x;
+    if (posY) posY.value = videoData.y;
   }
 
   applyTransform(video) {
@@ -361,9 +554,13 @@ class InstagramVideoEnhancer {
                         video.parentElement.querySelector('.ive-control-panel');
     if (!controlPanel) return;
 
-    const brightness = controlPanel.querySelector('.ive-brightness').value;
-    const contrast = controlPanel.querySelector('.ive-contrast').value;
-    const saturation = controlPanel.querySelector('.ive-saturation').value;
+    const brightnessEl = controlPanel.querySelector('.ive-brightness');
+    const contrastEl = controlPanel.querySelector('.ive-contrast');
+    const saturationEl = controlPanel.querySelector('.ive-saturation');
+
+    const brightness = brightnessEl ? brightnessEl.value : 100;
+    const contrast = contrastEl ? contrastEl.value : 100;
+    const saturation = saturationEl ? saturationEl.value : 100;
 
     video.style.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
   }
@@ -557,8 +754,8 @@ class InstagramVideoEnhancer {
     if (controlPanel) {
       const rotationSlider = controlPanel.querySelector('.ive-rotation');
       const rotationValue = controlPanel.querySelector('.ive-rotation-value');
-      rotationSlider.value = videoData.rotation;
-      rotationValue.textContent = `${videoData.rotation}°`;
+      if (rotationSlider) rotationSlider.value = videoData.rotation;
+      if (rotationValue) rotationValue.textContent = `${videoData.rotation}°`;
     }
   }
 
@@ -578,15 +775,25 @@ class InstagramVideoEnhancer {
     const controlPanel = video.closest('article, div[role="presentation"]')?.querySelector('.ive-control-panel') ||
                         video.parentElement.querySelector('.ive-control-panel');
     if (controlPanel) {
-      controlPanel.querySelector('.ive-rotation').value = 0;
-      controlPanel.querySelector('.ive-rotation-value').textContent = '0°';
-      controlPanel.querySelector('.ive-zoom').value = 100;
-      controlPanel.querySelector('.ive-zoom-value').textContent = '100%';
-      controlPanel.querySelector('.ive-pos-x').value = 0;
-      controlPanel.querySelector('.ive-pos-y').value = 0;
-      controlPanel.querySelector('.ive-brightness').value = 100;
-      controlPanel.querySelector('.ive-contrast').value = 100;
-      controlPanel.querySelector('.ive-saturation').value = 100;
+      const rotationSlider = controlPanel.querySelector('.ive-rotation');
+      const rotationValue = controlPanel.querySelector('.ive-rotation-value');
+      const zoomSlider = controlPanel.querySelector('.ive-zoom');
+      const zoomValue = controlPanel.querySelector('.ive-zoom-value');
+      const posX = controlPanel.querySelector('.ive-pos-x');
+      const posY = controlPanel.querySelector('.ive-pos-y');
+      const brightness = controlPanel.querySelector('.ive-brightness');
+      const contrast = controlPanel.querySelector('.ive-contrast');
+      const saturation = controlPanel.querySelector('.ive-saturation');
+
+      if (rotationSlider) rotationSlider.value = 0;
+      if (rotationValue) rotationValue.textContent = '0°';
+      if (zoomSlider) zoomSlider.value = 100;
+      if (zoomValue) zoomValue.textContent = '100%';
+      if (posX) posX.value = 0;
+      if (posY) posY.value = 0;
+      if (brightness) brightness.value = 100;
+      if (contrast) contrast.value = 100;
+      if (saturation) saturation.value = 100;
     }
   }
 
@@ -609,8 +816,8 @@ class InstagramVideoEnhancer {
 // Initialize the enhancer
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    new InstagramVideoEnhancer();
+    new InstagramFullscreenViewer();
   });
 } else {
-  new InstagramVideoEnhancer();
+  new InstagramFullscreenViewer();
 }

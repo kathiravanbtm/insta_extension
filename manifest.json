@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Instagram Video Enhancer Pro",
+  "name": "Instagram fullscreen viewer",
   "version": "2.0.0",
   "description": "Advanced Instagram video enhancement with rotation, zoom, crop, fullscreen, and download features",
   "permissions": [
@@ -30,7 +30,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Instagram Video Enhancer Pro",
+    "default_title": "Instagram full screen viewer",
     "default_icon": {
       "16": "icons/icon16.svg",
       "32": "icons/icon32.svg",
