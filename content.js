@@ -1,3 +1,11 @@
+/**
+ * Instagram Video Enhancer
+ * Copyright (c) 2025 Instagram Video Enhancer Contributors
+ * 
+ * Licensed under Custom License - See LICENSE file for details
+ * Personal use only - No commercial use or redistribution
+ */
+
 // Instagram fullscreen viewer - Content Script
 class InstagramFullscreenViewer {
   constructor() {
@@ -499,6 +507,9 @@ class InstagramFullscreenViewer {
         videoData.isFullscreen = true;
         video.style.objectFit = 'contain';
 
+        // Hide Instagram's native UI elements in fullscreen
+        this.hideInstagramUIInFullscreen(container);
+
         // Remove normal listeners to prevent conflicts
         // (none needed for keyboard toggle)
 
@@ -550,6 +561,9 @@ class InstagramFullscreenViewer {
         // Restore normal behavior
         // (no listeners to restore for keyboard toggle)
 
+        // Restore Instagram's UI elements
+        this.showInstagramUIInFullscreen(container);
+
         // Restore control panel
         if (controlPanel) {
           controlPanel.classList.add('ive-hidden');
@@ -559,6 +573,33 @@ class InstagramFullscreenViewer {
         setTimeout(() => this.applyTransform(video), 100);
       }).catch(console.error);
     }
+  }
+
+  hideInstagramUIInFullscreen(container) {
+    // Hide all Instagram UI elements except video and our controls
+    const elementsToHide = container.querySelectorAll(
+      'header, button:not(.ive-btn), svg:not(.ive-control-panel svg), ' +
+      'span:not(.ive-control-panel span):not(.ive-time):not(.ive-rotation-value):not(.ive-zoom-value), ' +
+      'a, h1, h2, h3, h4, h5, h6, p:not(.ive-control-panel p), ' +
+      'div[role="button"], [role="menuitem"]'
+    );
+    
+    elementsToHide.forEach(el => {
+      // Skip our control panel elements and the video itself
+      if (!el.closest('.ive-control-panel') && el.tagName !== 'VIDEO') {
+        el.style.setProperty('display', 'none', 'important');
+        el.setAttribute('data-ive-hidden', 'true');
+      }
+    });
+  }
+
+  showInstagramUIInFullscreen(container) {
+    // Restore hidden Instagram UI elements
+    const hiddenElements = container.querySelectorAll('[data-ive-hidden="true"]');
+    hiddenElements.forEach(el => {
+      el.style.removeProperty('display');
+      el.removeAttribute('data-ive-hidden');
+    });
   }
 
   downloadVideo(video) {
@@ -581,6 +622,13 @@ class InstagramFullscreenViewer {
 
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      // Ctrl+R for refresh
+      if (e.ctrlKey && e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        location.reload();
+        return;
+      }
 
       const activeVideo = this.getActiveVideo();
       if (!activeVideo) return;
@@ -653,6 +701,13 @@ class InstagramFullscreenViewer {
         case 'y':
           e.preventDefault();
           this.toggleAllControls();
+          break;
+        case 'm':
+          e.preventDefault();
+          if (activeVideo) {
+            activeVideo.muted = !activeVideo.muted;
+            console.log('Video muted:', activeVideo.muted);
+          }
           break;
       }
     });

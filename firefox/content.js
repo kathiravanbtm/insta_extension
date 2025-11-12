@@ -1,3 +1,11 @@
+/**
+ * Instagram Video Enhancer
+ * Copyright (c) 2025 Instagram Video Enhancer Contributors
+ * 
+ * Licensed under Custom License - See LICENSE file for details
+ * Personal use only - No commercial use or redistribution
+ */
+
 // Instagram Video Enhancer Pro - Content Script
 
 // Browser API compatibility
@@ -10,7 +18,7 @@ class InstagramVideoEnhancer {
     this.activeVideo = null;
     this.fullscreenMouseMoveHandler = null;
     this.fullscreenHideTimeout = null;
-    this.fullscreenShowControls = null;
+    this.fullscreenManualToggle = false; // Track manual toggle state
     this.init();
   }
 
@@ -126,35 +134,61 @@ class InstagramVideoEnhancer {
     const container = video.closest('article, div[role="presentation"]') || video.parentElement;
     if (!container) return;
 
+    // Detect container/video size for responsive layout
+    const containerRect = container.getBoundingClientRect();
+    const videoRect = video.getBoundingClientRect();
+    const effectiveWidth = Math.min(containerRect.width, videoRect.width);
+    const effectiveHeight = Math.min(containerRect.height, videoRect.height);
+
+    // Determine size class based on effective dimensions
+    let sizeClass = 'medium'; // default
+    if (effectiveWidth < 250 || effectiveHeight < 180) {
+      sizeClass = 'small';
+    } else if (effectiveWidth > 550 && effectiveHeight > 350) {
+      sizeClass = 'large';
+    }
+
+    // Determine aspect ratio class
+    const aspectRatio = effectiveWidth / effectiveHeight;
+    let aspectClass = '';
+    if (aspectRatio > 1.5) {
+      aspectClass = 'ive-landscape';
+    } else if (aspectRatio < 0.8) {
+      aspectClass = 'ive-portrait';
+    }
+
+    // Check if this is Instagram Reels
+    const isReels = window.location.pathname.includes('/reel/') || window.location.pathname.includes('/reels/');
+    const reelsClass = isReels ? 'ive-reels' : '';
+
     // Create main control panel
     const controlPanel = document.createElement('div');
-    controlPanel.className = `ive-control-panel ive-${this.settings.controlPosition} ive-${this.settings.theme} ive-${this.settings.controlSize}`;
-    controlPanel.style.background = `rgba(0, 0, 0, ${this.settings.controlOpacity})`;
+    controlPanel.className = `ive-control-panel ive-${this.settings.controlPosition} ive-${this.settings.theme} ive-size-${sizeClass} ${aspectClass} ${reelsClass}`.trim();
 
     controlPanel.innerHTML = `
       <div class="ive-controls-main">
         <div class="ive-controls-left">
           <button class="ive-btn ive-play-pause" title="Play/Pause">▶️</button>
-          <input type="range" class="ive-slider ive-timeline" min="0" max="100" value="0" />
-          <span class="ive-time">0:00 / 0:00</span>
+          <input type="range" class="ive-slider ive-timeline ive-hide-small" min="0" max="100" value="0" />
+          <span class="ive-time ive-hide-small">0:00 / 0:00</span>
         </div>
         <div class="ive-controls-center">
-          <button class="ive-btn ive-rotate-left" title="Rotate Left">↺</button>
-          <input type="range" class="ive-slider ive-rotation" min="0" max="270" step="90" value="0" />
-          <span class="ive-rotation-value">0°</span>
-          <button class="ive-btn ive-rotate-right" title="Rotate Right">↻</button>
+          <button class="ive-btn ive-rotate-left ive-hide-small" title="Rotate Left">↺</button>
+          <input type="range" class="ive-slider ive-rotation ${sizeClass === 'small' ? 'ive-compact' : ''}" min="0" max="270" step="90" value="0" />
+          <span class="ive-rotation-value ive-hide-small">0°</span>
+          <button class="ive-btn ive-rotate-right ive-hide-small" title="Rotate Right">↻</button>
         </div>
         <div class="ive-controls-right">
-          <button class="ive-btn ive-zoom-out" title="Zoom Out">🔍-</button>
-          <input type="range" class="ive-slider ive-zoom" min="25" max="400" value="100" />
-          <span class="ive-zoom-value">100%</span>
-          <button class="ive-btn ive-zoom-in" title="Zoom In">🔍+</button>
+          <button class="ive-btn ive-zoom-out ive-hide-small" title="Zoom Out">🔍-</button>
+          <input type="range" class="ive-slider ive-zoom ${sizeClass === 'small' ? 'ive-compact' : ''}" min="25" max="400" value="100" />
+          <span class="ive-zoom-value ive-hide-small">100%</span>
+          <button class="ive-btn ive-zoom-in ive-hide-small" title="Zoom In">🔍+</button>
           <button class="ive-btn ive-fullscreen" title="Fullscreen">⛶</button>
-          <button class="ive-btn ive-download" title="Download">⬇️</button>
-          <button class="ive-btn ive-settings" title="Settings">⚙️</button>
+          <button class="ive-btn ive-download ive-show-large" title="Download">⬇️</button>
+          <button class="ive-btn ive-settings ive-show-large" title="Settings">⚙️</button>
         </div>
       </div>
-      <div class="ive-controls-advanced" style="display: ${this.settings.showAdvanced ? 'flex' : 'none'};">
+      <div class="ive-controls-advanced ive-show-large">
         <div class="ive-position-controls">
           <label>X: <input type="range" class="ive-slider ive-pos-x" min="-200" max="200" value="0" /></label>
           <label>Y: <input type="range" class="ive-slider ive-pos-y" min="-200" max="200" value="0" /></label>
@@ -174,33 +208,78 @@ class InstagramVideoEnhancer {
 
     container.appendChild(controlPanel);
 
-    // Initially hide controls
-    controlPanel.style.opacity = '0';
-    controlPanel.style.pointerEvents = 'none';
+    // Initially hide controls by default
+    controlPanel.classList.add('ive-hidden');
 
-    // Show controls on hover
-    let hideTimeout;
-    const showControls = () => {
-      clearTimeout(hideTimeout);
-      controlPanel.style.opacity = '1';
-      controlPanel.style.pointerEvents = 'auto';
-    };
+    // Store references for cleanup
+    const videoData = this.enhancedVideos.get(video);
+    videoData.controlPanel = controlPanel;
+    videoData.container = container;
 
-    const hideControls = () => {
-      hideTimeout = setTimeout(() => {
-        const videoData = this.enhancedVideos.get(video);
-        if (!videoData || videoData.isFullscreen || videoData.controlsVisible) {
-          return;
-        }
-        controlPanel.style.opacity = '0';
-        controlPanel.style.pointerEvents = 'none';
-      }, 2000);
-    };
+    // Add resize observer for dynamic responsiveness
+    this.addResizeObserver(video, controlPanel);
+  }
 
-    container.addEventListener('mouseenter', showControls);
-    container.addEventListener('mouseleave', hideControls);
-    controlPanel.addEventListener('mouseenter', showControls);
-    controlPanel.addEventListener('mouseleave', hideControls);
+  addResizeObserver(video, controlPanel) {
+    // Create a resize observer to update control panel size dynamically
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        // Debounce the resize handling
+        clearTimeout(this.resizeTimeout);
+        this.resizeTimeout = setTimeout(() => {
+          this.updateControlPanelSize(video, controlPanel);
+        }, 100);
+      }
+    });
+
+    // Observe the video element and its container
+    const container = video.closest('article, div[role="presentation"]') || video.parentElement;
+    if (container) {
+      resizeObserver.observe(container);
+    }
+    resizeObserver.observe(video);
+
+    // Store the observer for cleanup
+    const videoData = this.enhancedVideos.get(video);
+    if (videoData) {
+      videoData.resizeObserver = resizeObserver;
+    }
+  }
+
+  updateControlPanelSize(video, controlPanel) {
+    const container = video.closest('article, div[role="presentation"]') || video.parentElement;
+    if (!container || !controlPanel) return;
+
+    // Recalculate size class
+    const containerRect = container.getBoundingClientRect();
+    const videoRect = video.getBoundingClientRect();
+    const effectiveWidth = Math.min(containerRect.width, videoRect.width);
+    const effectiveHeight = Math.min(containerRect.height, videoRect.height);
+
+    let newSizeClass = 'medium'; // default
+    if (effectiveWidth < 250 || effectiveHeight < 180) {
+      newSizeClass = 'small';
+    } else if (effectiveWidth > 550 && effectiveHeight > 350) {
+      newSizeClass = 'large';
+    }
+
+    // Recalculate aspect ratio class
+    const aspectRatio = effectiveWidth / effectiveHeight;
+    let newAspectClass = '';
+    if (aspectRatio > 1.5) {
+      newAspectClass = 'ive-landscape';
+    } else if (aspectRatio < 0.8) {
+      newAspectClass = 'ive-portrait';
+    }
+
+    // Update classes
+    controlPanel.classList.remove('ive-size-small', 'ive-size-medium', 'ive-size-large');
+    controlPanel.classList.add(`ive-size-${newSizeClass}`);
+
+    controlPanel.classList.remove('ive-landscape', 'ive-portrait');
+    if (newAspectClass) {
+      controlPanel.classList.add(newAspectClass);
+    }
   }
 
   bindVideoEvents(video) {
@@ -402,45 +481,33 @@ class InstagramVideoEnhancer {
         videoData.isFullscreen = true;
         video.style.objectFit = 'contain';
 
-        // Use mousemove-based behavior for fullscreen
+        // Hide Instagram's native UI elements in fullscreen
+        this.hideInstagramUIInFullscreen(container);
+
+        // Remove normal listeners to prevent conflicts
+        // (none needed for keyboard toggle)
+
+        // Make controls hidden in fullscreen and show on mousemove
         if (controlPanel) {
+          controlPanel.classList.add('ive-hidden');
           controlPanel.classList.add('ive-fullscreen-mode');
 
-          // Initially hide controls
-          controlPanel.style.opacity = '0';
-          controlPanel.style.pointerEvents = 'none';
-
-          // Show controls on mouse movement, hide after delay
-          this.fullscreenShowControls = () => {
-            controlPanel.style.opacity = '1';
-            controlPanel.style.pointerEvents = 'auto';
-            clearTimeout(this.fullscreenHideTimeout);
-            this.fullscreenHideTimeout = setTimeout(() => {
-              if (videoData.isFullscreen && !videoData.controlsVisible) {
-                controlPanel.style.opacity = '0';
-                controlPanel.style.pointerEvents = 'none';
-              }
-            }, 2000); // Hide after 2 seconds of no movement
+          // Show controls on mousemove, hide after 1 second (only if not manually toggled)
+          this.fullscreenMouseMoveHandler = () => {
+            if (!this.fullscreenManualToggle) {
+              console.log('Showing controls in fullscreen');
+              controlPanel.classList.remove('ive-hidden');
+              clearTimeout(this.fullscreenHideTimeout);
+              this.fullscreenHideTimeout = setTimeout(() => {
+                if (!this.fullscreenManualToggle) {
+                  console.log('Hiding controls in fullscreen');
+                  controlPanel.classList.add('ive-hidden');
+                }
+              }, 1000);
+            }
           };
 
-          // Add mousemove listener to document
-          document.addEventListener('mousemove', this.fullscreenShowControls);
-          
-          // Also show on control panel hover
-          controlPanel.addEventListener('mouseenter', () => {
-            clearTimeout(this.fullscreenHideTimeout);
-            controlPanel.style.opacity = '1';
-            controlPanel.style.pointerEvents = 'auto';
-          });
-          
-          controlPanel.addEventListener('mouseleave', () => {
-            this.fullscreenHideTimeout = setTimeout(() => {
-              if (videoData.isFullscreen && !videoData.controlsVisible) {
-                controlPanel.style.opacity = '0';
-                controlPanel.style.pointerEvents = 'none';
-              }
-            }, 2000);
-          });
+          document.addEventListener('mousemove', this.fullscreenMouseMoveHandler);
         }
 
         setTimeout(() => this.applyTransform(video), 100);
@@ -457,23 +524,56 @@ class InstagramVideoEnhancer {
         videoData.isFullscreen = false;
         video.style.objectFit = '';
 
-        // Remove fullscreen event listeners
-        if (this.fullscreenShowControls) {
-          document.removeEventListener('mousemove', this.fullscreenShowControls);
-          this.fullscreenShowControls = null;
+        // Remove fullscreen mousemove listener
+        if (this.fullscreenMouseMoveHandler) {
+          document.removeEventListener('mousemove', this.fullscreenMouseMoveHandler);
+          this.fullscreenMouseMoveHandler = null;
+          clearTimeout(this.fullscreenHideTimeout);
+          this.fullscreenManualToggle = false; // Reset manual toggle flag
         }
-        clearTimeout(this.fullscreenHideTimeout);
 
-        // Restore normal hover behavior
+        // Restore normal behavior
+        // (no listeners to restore for keyboard toggle)
+
+        // Restore Instagram's UI elements
+        this.showInstagramUIInFullscreen(container);
+
+        // Restore control panel
         if (controlPanel) {
+          controlPanel.classList.add('ive-hidden');
           controlPanel.classList.remove('ive-fullscreen-mode');
-          controlPanel.style.opacity = '0';
-          controlPanel.style.pointerEvents = 'none';
         }
 
         setTimeout(() => this.applyTransform(video), 100);
       }).catch(console.error);
     }
+  }
+
+  hideInstagramUIInFullscreen(container) {
+    // Hide all Instagram UI elements except video and our controls
+    const elementsToHide = container.querySelectorAll(
+      'header, button:not(.ive-btn), svg:not(.ive-control-panel svg), ' +
+      'span:not(.ive-control-panel span):not(.ive-time):not(.ive-rotation-value):not(.ive-zoom-value), ' +
+      'a, h1, h2, h3, h4, h5, h6, p:not(.ive-control-panel p), ' +
+      'div[role="button"], [role="menuitem"]'
+    );
+    
+    elementsToHide.forEach(el => {
+      // Skip our control panel elements and the video itself
+      if (!el.closest('.ive-control-panel') && el.tagName !== 'VIDEO') {
+        el.style.setProperty('display', 'none', 'important');
+        el.setAttribute('data-ive-hidden', 'true');
+      }
+    });
+  }
+
+  showInstagramUIInFullscreen(container) {
+    // Restore hidden Instagram UI elements
+    const hiddenElements = container.querySelectorAll('[data-ive-hidden="true"]');
+    hiddenElements.forEach(el => {
+      el.style.removeProperty('display');
+      el.removeAttribute('data-ive-hidden');
+    });
   }
 
   downloadVideo(video) {
@@ -496,6 +596,13 @@ class InstagramVideoEnhancer {
 
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      // Ctrl+R for refresh
+      if (e.ctrlKey && e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        location.reload();
+        return;
+      }
 
       const activeVideo = this.getActiveVideo();
       if (!activeVideo) return;
@@ -533,6 +640,48 @@ class InstagramVideoEnhancer {
         case '0':
           e.preventDefault();
           this.resetVideo(activeVideo);
+          break;
+        case 'j':
+          e.preventDefault();
+          const activeVideoJ = this.getActiveVideo();
+          if (activeVideoJ) {
+            const data = this.enhancedVideos.get(activeVideoJ);
+            if (data) {
+              data.scale = Math.min(400, data.scale + 25);
+              this.applyTransform(activeVideoJ);
+              this.updateZoomUI(activeVideoJ);
+            }
+          }
+          break;
+        case 'k':
+          e.preventDefault();
+          const activeVideoK = this.getActiveVideo();
+          if (activeVideoK) {
+            const data = this.enhancedVideos.get(activeVideoK);
+            if (data) {
+              data.scale = Math.max(25, data.scale - 25);
+              this.applyTransform(activeVideoK);
+              this.updateZoomUI(activeVideoK);
+            }
+          }
+          break;
+        case 'g':
+          e.preventDefault();
+          const activeVideoG = this.getActiveVideo();
+          if (activeVideoG) {
+            activeVideoG.currentTime = 0;
+          }
+          break;
+        case 'y':
+          e.preventDefault();
+          this.toggleAllControls();
+          break;
+        case 'm':
+          e.preventDefault();
+          if (activeVideo) {
+            activeVideo.muted = !activeVideo.muted;
+            console.log('Video muted:', activeVideo.muted);
+          }
           break;
       }
     });
@@ -627,11 +776,30 @@ class InstagramVideoEnhancer {
 
   toggleAllControls() {
     const controlPanels = document.querySelectorAll('.ive-control-panel');
+    const isInFullscreen = document.fullscreenElement !== null;
+    
     controlPanels.forEach(panel => {
-      const isVisible = panel.style.opacity !== '0';
-      panel.style.opacity = isVisible ? '0' : '1';
-      panel.style.pointerEvents = isVisible ? 'none' : 'auto';
+      panel.classList.toggle('ive-hidden');
+      
+      // If in fullscreen, set manual toggle flag
+      if (isInFullscreen) {
+        const wasHidden = panel.classList.contains('ive-hidden');
+        this.fullscreenManualToggle = !wasHidden; // true if now visible, false if now hidden
+        console.log('Manual toggle in fullscreen:', this.fullscreenManualToggle);
+      }
     });
+  }
+
+  updateZoomUI(video) {
+    const controlPanel = video.closest('article, div[role="presentation"]')?.querySelector('.ive-control-panel') ||
+                        video.parentElement.querySelector('.ive-control-panel');
+    if (!controlPanel) return;
+
+    const zoomSlider = controlPanel.querySelector('.ive-zoom');
+    const zoomValue = controlPanel.querySelector('.ive-zoom-value');
+    const data = this.enhancedVideos.get(video);
+    if (data && zoomSlider) zoomSlider.value = data.scale;
+    if (data && zoomValue) zoomValue.textContent = `${data.scale}%`;
   }
 
   formatTime(seconds) {
