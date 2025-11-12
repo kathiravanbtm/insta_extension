@@ -19,6 +19,11 @@
   color: white;
 }
 
+.ive-control-panel.ive-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .ive-control-panel.ive-top {
   bottom: auto;
   top: 10px;
@@ -49,7 +54,6 @@
   display: flex;
   align-items: center;
   gap: 15px;
-  flex-wrap: wrap;
 }
 
 .ive-controls-left,
@@ -90,10 +94,12 @@
 .ive-btn:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .ive-btn:active {
   transform: scale(0.95);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .ive-btn.ive-play-pause {
@@ -159,8 +165,9 @@
 
 /* Advanced Controls */
 .ive-controls-advanced {
-  margin-top: 12px;
-  padding-top: 12px;
+  display: none;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   flex-direction: column;
@@ -402,13 +409,6 @@ video {
   left: 20px !important;
   right: 20px !important;
   z-index: 99999 !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-}
-
-.ive-control-panel.ive-fullscreen-mode {
-  opacity: 1 !important;
-  pointer-events: auto !important;
 }
 
 :fullscreen video {
@@ -423,7 +423,7 @@ video {
 }
 
 .ive-control-panel.ive-size-small .ive-controls-main {
-  gap: 6px;
+  gap: 3px;
 }
 
 .ive-control-panel.ive-size-small .ive-btn {
@@ -497,6 +497,23 @@ video {
 .ive-control-panel.ive-size-large .ive-slider::-moz-range-thumb {
   width: 14px;
   height: 14px;
+}
+
+/* Hide/show elements based on size */
+.ive-hide-small {
+  display: inline-flex;
+}
+
+.ive-size-small .ive-hide-small {
+  display: none;
+}
+
+.ive-show-large {
+  display: none;
+}
+
+.ive-size-large .ive-show-large {
+  display: inline-flex;
 }
 
 /* Compact slider for small sizes */
@@ -577,6 +594,12 @@ video {
     width: 60px;
     max-width: 80px;
   }
+}
+
+.ive-control-panel.ive-size-small .ive-controls-left,
+.ive-control-panel.ive-size-small .ive-controls-center,
+.ive-control-panel.ive-size-small .ive-controls-right {
+  gap: 3px;
 }
 
 /* Very small screens */

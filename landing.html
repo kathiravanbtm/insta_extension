@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Video Enhancer - Chrome Extension</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            padding: 50px 0;
+            color: white;
+        }
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .section {
+            background: white;
+            margin: 20px 0;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .feature {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+        .feature:hover {
+            transform: translateY(-5px);
+        }
+        .feature h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .donation {
+            text-align: center;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .donation h2 {
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        .donation p {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+        .donate-btn {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255,107,107,0.4);
+        }
+        .donate-btn:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255,107,107,0.6);
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            opacity: 0.8;
+        }
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+            .section {
+                padding: 20px;
+            }
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🎬 Instagram Video Enhancer</h1>
+            <p>Transform your Instagram video viewing experience with powerful controls and enhancements</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="section">
+            <h2>About the Extension</h2>
+            <p>Instagram Video Enhancer is a Chrome extension that adds advanced video controls to Instagram videos. Enjoy fullscreen viewing, rotation, zoom, and more - all with a responsive, user-friendly interface that adapts to any video size.</p>
+        </section>
+
+        <section class="section">
+            <h2>Key Features</h2>
+            <div class="features">
+                <div class="feature">
+                    <h3>🎥 Fullscreen Mode</h3>
+                    <p>Enter true fullscreen with enhanced controls for immersive viewing</p>
+                </div>
+                <div class="feature">
+                    <h3>🔄 Rotation & Zoom</h3>
+                    <p>Rotate videos in 90-degree increments and zoom from 25% to 400%</p>
+                </div>
+                <div class="feature">
+                    <h3>📱 Responsive Design</h3>
+                    <p>Controls adapt automatically to video size - minimal for small videos, full-featured for large ones</p>
+                </div>
+                <div class="feature">
+                    <h3>⌨️ Keyboard Shortcuts</h3>
+                    <p>Use keyboard shortcuts for quick control (spacebar, R, F, etc.)</p>
+                </div>
+                <div class="feature">
+                    <h3>⬇️ Download Support</h3>
+                    <p>Download Instagram videos directly from the enhanced player</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="donation">
+            <h2>☕ Support the Developer</h2>
+            <p>This extension is free and open-source. If you find it useful, consider buying me a coffee to keep it maintained and improved!</p>
+            <p><strong>Goal: $5 (or ₹500)</strong> - Every bit helps!</p>
+            <a href="https://rzp.io/l/instagram-video-enhancer-donation" class="donate-btn" target="_blank">Donate Now 💝</a>
+        </section>
+
+        <section class="section">
+            <h2>How to Install</h2>
+            <ol>
+                <li>Visit the <a href="https://chrome.google.com/webstore" target="_blank">Chrome Web Store</a></li>
+                <li>Search for "Instagram Video Enhancer"</li>
+                <li>Click "Add to Chrome"</li>
+                <li>Visit Instagram and enjoy enhanced video controls!</li>
+            </ol>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Instagram Video Enhancer. Made with ❤️ for better video experiences.</p>
+        </div>
+    </footer>
+</body>
+</html>
