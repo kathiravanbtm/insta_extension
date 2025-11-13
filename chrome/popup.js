@@ -1,13 +1,13 @@
-// Instagram Video Enhancer Pro - Popup Script
+// Browser API compatibility
+const browserAPI = (typeof browser !== 'undefined') ? browser : chrome;
+
+// MaxiReel - Popup Script
 document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
   bindEvents();
   updateStatus();
   loadStats();
 });
-
-// Browser API compatibility
-const browserAPI = (typeof browser !== 'undefined') ? browser : chrome;
 
 async function loadSettings() {
   try {
@@ -28,7 +28,10 @@ function getSettings() {
       showControls: true,
       enableDownload: true,
       controlPosition: 'bottom',
-      theme: 'dark'
+      theme: 'dark',
+      controlOpacity: 0.85,
+      controlSize: 'normal',
+      showAdvanced: true
     }, resolve);
   });
 }
@@ -38,10 +41,15 @@ function applySettingsToUI(settings) {
   document.getElementById('autoEnhance').classList.toggle('active', settings.autoEnhance);
   document.getElementById('keyboardShortcuts').classList.toggle('active', settings.enableKeyboardShortcuts);
   document.getElementById('enableDownload').classList.toggle('active', settings.enableDownload);
+  document.getElementById('showAdvanced').classList.toggle('active', settings.showAdvanced);
 
   // Select controls
   document.getElementById('controlPosition').value = settings.controlPosition;
   document.getElementById('theme').value = settings.theme;
+  document.getElementById('controlSize').value = settings.controlSize;
+
+  // Slider controls
+  document.getElementById('controlOpacity').value = settings.controlOpacity;
 }
 
 function bindEvents() {
@@ -54,8 +62,35 @@ function bindEvents() {
     toggleSetting(e.target, 'enableKeyboardShortcuts');
   });
 
-  document.getElementById('enableDownload').addEventListener('click', (e) => {
-    toggleSetting(e.target, 'enableDownload');
+  document.getElementById('enableDownload').addEventListener('click', async (e) => {
+    const shouldEnable = !e.target.classList.contains('active');
+    
+    if (shouldEnable) {
+      // Check if we already have the permission
+      const hasPermission = await browserAPI.permissions.contains({ permissions: ['downloads'] });
+      
+      if (!hasPermission) {
+        // Request the permission
+        const granted = await browserAPI.permissions.request({ permissions: ['downloads'] });
+        
+        if (granted) {
+          toggleSetting(e.target, 'enableDownload');
+          showStatus('Download permission granted', 'success');
+        } else {
+          showStatus('Download permission denied', 'error');
+        }
+      } else {
+        toggleSetting(e.target, 'enableDownload');
+      }
+    } else {
+      // Disabling - optionally remove permission
+      toggleSetting(e.target, 'enableDownload');
+      showStatus('Downloads disabled', 'info');
+    }
+  });
+
+  document.getElementById('showAdvanced').addEventListener('click', (e) => {
+    toggleSetting(e.target, 'showAdvanced');
   });
 
   // Select controls
@@ -65,6 +100,15 @@ function bindEvents() {
 
   document.getElementById('theme').addEventListener('change', (e) => {
     saveSetting('theme', e.target.value);
+  });
+
+  document.getElementById('controlSize').addEventListener('change', (e) => {
+    saveSetting('controlSize', e.target.value);
+  });
+
+  // Slider controls
+  document.getElementById('controlOpacity').addEventListener('input', (e) => {
+    saveSetting('controlOpacity', parseFloat(e.target.value));
   });
 
   // Quick actions
@@ -80,7 +124,7 @@ function toggleSetting(element, settingKey) {
 
 function saveSetting(key, value) {
   const settings = { [key]: value };
-  browserAPI.storage.sync.set(settings, () => {
+  browserAPI.storage.local.set(settings, () => {
     if (browserAPI.runtime.lastError) {
       console.error('Failed to save setting:', browserAPI.runtime.lastError);
       showStatus('Failed to save setting', 'error');

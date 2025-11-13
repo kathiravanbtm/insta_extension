@@ -1,8 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Instagram fullscreen viewer",
+  "name": "MaxiReel",
   "version": "2.0.0",
-  "description": "Advanced Instagram video enhancement with rotation, zoom, crop, fullscreen, and download features",
+  "description": "View Instagram videos in immersive fullscreen mode with rotation, zoom, keyboard shortcuts, and advanced controls. Hidden controls, auto-hide UI, and professional video viewing experience.",
+  
+  "author": "Kathiravan",
+  
   "permissions": [
     "activeTab",
     "storage",
@@ -30,18 +33,20 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Instagram full screen viewer",
+    "default_title": "MaxiReel",
     "default_icon": {
-      "16": "icons/icon16.svg",
-      "32": "icons/icon32.svg",
-      "48": "icons/icon48.svg",
-      "128": "icons/icon128.svg"
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "96": "icons/icon96.png",
+      "128": "icons/icon128.png"
     }
   },
   "icons": {
-    "16": "icons/icon16.svg",
-    "32": "icons/icon32.svg",
-    "48": "icons/icon48.svg",
-    "128": "icons/icon128.svg"
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "96": "icons/icon96.png",
+    "128": "icons/icon128.png"
   }
 }

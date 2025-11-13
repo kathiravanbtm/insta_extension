@@ -1,13 +1,13 @@
 /**
- * Instagram Video Enhancer
- * Copyright (c) 2025 Instagram Video Enhancer Contributors
+ * MaxiReel
+ * Copyright (c) 2025 Kathiravan
  * 
  * Licensed under Custom License - See LICENSE file for details
  * Personal use only - No commercial use or redistribution
  */
 
-// Instagram fullscreen viewer - Content Script
-class InstagramFullscreenViewer {
+// MaxiReel - Content Script
+class InstagramVideoEnhancer {
   constructor() {
     this.enhancedVideos = new Map();
     this.settings = {};
@@ -709,6 +709,40 @@ class InstagramFullscreenViewer {
             console.log('Video muted:', activeVideo.muted);
           }
           break;
+        case 'e':
+          // Move up (decrease Y)
+          e.preventDefault();
+          {
+            const v = this.getActiveVideo();
+            if (v) {
+              const data = this.enhancedVideos.get(v);
+              if (data) {
+                data.y = Math.max(-200, (data.y || 0) - 10);
+                this.applyTransform(v);
+                const cp = v.closest('article, div[role="presentation"]')?.querySelector('.ive-control-panel') || v.parentElement.querySelector('.ive-control-panel');
+                const posY = cp?.querySelector('.ive-pos-y');
+                if (posY) posY.value = data.y;
+              }
+            }
+          }
+          break;
+        case 'd':
+          // Move down (increase Y)
+          e.preventDefault();
+          {
+            const v = this.getActiveVideo();
+            if (v) {
+              const data = this.enhancedVideos.get(v);
+              if (data) {
+                data.y = Math.min(200, (data.y || 0) + 10);
+                this.applyTransform(v);
+                const cp = v.closest('article, div[role="presentation"]')?.querySelector('.ive-control-panel') || v.parentElement.querySelector('.ive-control-panel');
+                const posY = cp?.querySelector('.ive-pos-y');
+                if (posY) posY.value = data.y;
+              }
+            }
+          }
+          break;
       }
     });
   }
@@ -844,8 +878,8 @@ class InstagramFullscreenViewer {
 // Initialize the enhancer
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    new InstagramFullscreenViewer();
+    new InstagramVideoEnhancer();
   });
 } else {
-  new InstagramFullscreenViewer();
+  new InstagramVideoEnhancer();
 }

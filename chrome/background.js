@@ -1,6 +1,14 @@
-// Instagram fullscreen viewer - Background Script
+/**
+ * MaxiReel
+ * Copyright (c) 2025 Kathiravan
+ * 
+ * Licensed under Custom License - See LICENSE file for details
+ * Personal use only - No commercial use or redistribution
+ */
+
+// MaxiReel - Background Script
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('Instagram fullscreen viewer extension installed.');
+  console.log('MaxiReel extension installed.');
 
   // Set default settings
   chrome.storage.sync.set({
@@ -21,8 +29,8 @@ chrome.runtime.onInstalled.addListener(() => {
 
 function createContextMenu() {
   chrome.contextMenus.create({
-    id: 'fullscreenViewer',
-    title: 'Instagram fullscreen viewer',
+    id: 'maxireel',
+    title: 'MaxiReel',
     contexts: ['video'],
     documentUrlPatterns: [
       'https://www.instagram.com/*',
