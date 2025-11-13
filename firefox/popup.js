@@ -1,7 +1,7 @@
 // Browser API compatibility
 const browserAPI = (typeof browser !== 'undefined') ? browser : chrome;
 
-// Instagram Video Enhancer Pro - Popup Script
+// MaxiReel - Popup Script
 document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
   bindEvents();
@@ -62,8 +62,31 @@ function bindEvents() {
     toggleSetting(e.target, 'enableKeyboardShortcuts');
   });
 
-  document.getElementById('enableDownload').addEventListener('click', (e) => {
-    toggleSetting(e.target, 'enableDownload');
+  document.getElementById('enableDownload').addEventListener('click', async (e) => {
+    const shouldEnable = !e.target.classList.contains('active');
+    
+    if (shouldEnable) {
+      // Check if we already have the permission
+      const hasPermission = await browserAPI.permissions.contains({ permissions: ['downloads'] });
+      
+      if (!hasPermission) {
+        // Request the permission
+        const granted = await browserAPI.permissions.request({ permissions: ['downloads'] });
+        
+        if (granted) {
+          toggleSetting(e.target, 'enableDownload');
+          showStatus('Download permission granted', 'success');
+        } else {
+          showStatus('Download permission denied', 'error');
+        }
+      } else {
+        toggleSetting(e.target, 'enableDownload');
+      }
+    } else {
+      // Disabling - optionally remove permission
+      toggleSetting(e.target, 'enableDownload');
+      showStatus('Downloads disabled', 'info');
+    }
   });
 
   document.getElementById('showAdvanced').addEventListener('click', (e) => {

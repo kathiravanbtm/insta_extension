@@ -1,12 +1,12 @@
 /**
- * Instagram Video Enhancer
- * Copyright (c) 2025 Instagram Video Enhancer Contributors
+ * MaxiReel
+ * Copyright (c) 2025 Kathiravan
  * 
  * Licensed under Custom License - See LICENSE file for details
  * Personal use only - No commercial use or redistribution
  */
 
-// Instagram Video Enhancer Pro - Content Script
+// MaxiReel - Content Script
 
 // Browser API compatibility
 var browser = typeof browser !== 'undefined' ? browser : chrome;
@@ -23,7 +23,7 @@ class InstagramVideoEnhancer {
   }
 
   async init() {
-    console.log('Instagram Video Enhancer Pro initialized');
+    console.log('MaxiReel initialized');
     await this.loadSettings();
     this.addVideoObserver();
     this.setupKeyboardShortcuts();
@@ -165,6 +165,8 @@ class InstagramVideoEnhancer {
     const controlPanel = document.createElement('div');
     controlPanel.className = `ive-control-panel ive-${this.settings.controlPosition} ive-${this.settings.theme} ive-size-${sizeClass} ${aspectClass} ${reelsClass}`.trim();
 
+    // Safe: static HTML template, no user input
+    // eslint-disable-next-line no-unsanitized/property
     controlPanel.innerHTML = `
       <div class="ive-controls-main">
         <div class="ive-controls-left">
@@ -681,6 +683,40 @@ class InstagramVideoEnhancer {
           if (activeVideo) {
             activeVideo.muted = !activeVideo.muted;
             console.log('Video muted:', activeVideo.muted);
+          }
+          break;
+        case 'e':
+          // Move up (decrease Y)
+          e.preventDefault();
+          {
+            const v = this.getActiveVideo();
+            if (v) {
+              const data = this.enhancedVideos.get(v);
+              if (data) {
+                data.y = Math.max(-200, (data.y || 0) - 10);
+                this.applyTransform(v);
+                const cp = v.closest('article, div[role="presentation"]')?.querySelector('.ive-control-panel') || v.parentElement.querySelector('.ive-control-panel');
+                const posY = cp?.querySelector('.ive-pos-y');
+                if (posY) posY.value = data.y;
+              }
+            }
+          }
+          break;
+        case 'd':
+          // Move down (increase Y)
+          e.preventDefault();
+          {
+            const v = this.getActiveVideo();
+            if (v) {
+              const data = this.enhancedVideos.get(v);
+              if (data) {
+                data.y = Math.min(200, (data.y || 0) + 10);
+                this.applyTransform(v);
+                const cp = v.closest('article, div[role="presentation"]')?.querySelector('.ive-control-panel') || v.parentElement.querySelector('.ive-control-panel');
+                const posY = cp?.querySelector('.ive-pos-y');
+                if (posY) posY.value = data.y;
+              }
+            }
           }
           break;
       }

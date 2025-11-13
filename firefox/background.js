@@ -1,9 +1,17 @@
+/**
+ * MaxiReel
+ * Copyright (c) 2025 Kathiravan
+ * 
+ * Licensed under Custom License - See LICENSE file for details
+ * Personal use only - No commercial use or redistribution
+ */
+
 // Browser API compatibility
 var browser = typeof browser !== 'undefined' ? browser : chrome;
 
-// Instagram Video Enhancer Pro - Background Script
+// MaxiReel - Background Script
 browser.runtime.onInstalled.addListener(() => {
-  console.log('Instagram Video Enhancer Pro installed');
+  console.log('MaxiReel installed');
 
   // Set default settings
   browser.storage.sync.set({
@@ -23,7 +31,10 @@ browser.runtime.onInstalled.addListener(() => {
 });
 
 function createContextMenu() {
-  browser.contextMenus.create({
+  // Use 'menus' API for Firefox (contextMenus is also supported but menus is preferred)
+  const menusAPI = browser.menus || browser.contextMenus;
+  
+  menusAPI.create({
     id: 'enhanceVideo',
     title: 'Enhance Instagram Video',
     contexts: ['video'],
@@ -33,7 +44,7 @@ function createContextMenu() {
     ]
   });
 
-  browser.contextMenus.create({
+  menusAPI.create({
     id: 'toggleControls',
     title: 'Toggle All Controls',
     contexts: ['page'],
@@ -43,7 +54,7 @@ function createContextMenu() {
     ]
   });
 
-  browser.contextMenus.create({
+  menusAPI.create({
     id: 'resetAllVideos',
     title: 'Reset All Videos',
     contexts: ['page'],
@@ -55,7 +66,8 @@ function createContextMenu() {
 }
 
 // Handle context menu clicks
-browser.contextMenus.onClicked.addListener((info, tab) => {
+const menusAPI = browser.menus || browser.contextMenus;
+menusAPI.onClicked.addListener((info, tab) => {
   switch (info.menuItemId) {
     case 'enhanceVideo':
       browser.tabs.sendMessage(tab.id, { action: 'enhanceCurrentVideo' });

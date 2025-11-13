@@ -1,18 +1,34 @@
 {
   "manifest_version": 2,
-  "name": "Instagram Video Enhancer Pro",
+  "name": "MaxiReel",
   "version": "2.0.0",
-  "description": "Advanced Instagram video enhancement with rotation, zoom, crop, fullscreen, and download features",
-  "id": "instagram-video-enhancer@example.com",
+  "description": "View Instagram videos in immersive fullscreen mode with rotation, zoom, keyboard shortcuts, and advanced controls. Hidden controls, auto-hide UI, and professional video viewing experience.",
+  
+  "author": "Kathiravan",
+  
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "maxireel@kathiravanbtm.github.io",
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+     }
+    }
+  },
+
   "permissions": [
     "activeTab",
-    "tabs",
     "storage",
     "downloads",
-    "contextMenus",
+    "menus",
     "https://www.instagram.com/*",
     "https://instagram.com/*"
   ],
+
+  "optional_permissions": [
+    "downloads"
+  ],
+
   "content_scripts": [
     {
       "matches": [
@@ -24,23 +40,35 @@
       "run_at": "document_end"
     }
   ],
+
   "background": {
     "scripts": ["background.js"]
   },
+
   "browser_action": {
     "default_popup": "popup.html",
-    "default_title": "Instagram Video Enhancer Pro",
+    "default_title": "MaxiReel",
     "default_icon": {
-      "16": "icons/icon16.svg",
-      "32": "icons/icon32.svg",
-      "48": "icons/icon48.svg",
-      "128": "icons/icon128.svg"
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "96": "icons/icon96.png",
+      "128": "icons/icon128.png"
     }
   },
+
   "icons": {
-    "16": "icons/icon16.svg",
-    "32": "icons/icon32.svg",
-    "48": "icons/icon48.svg",
-    "128": "icons/icon128.svg"
-  }
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "96": "icons/icon96.png",
+    "128": "icons/icon128.png"
+  },
+
+  "developer": {
+    "name": "Kathiravan",
+    "url": "https://kathiravanbtm.github.io"
+  },
+
+  "homepage_url": "https://kathiravanbtm.github.io/insta-extension"
 }
