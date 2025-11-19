@@ -686,36 +686,27 @@ class InstagramVideoEnhancer {
           }
           break;
         case 'e':
-          // Move up (decrease Y)
-          e.preventDefault();
-          {
-            const v = this.getActiveVideo();
-            if (v) {
-              const data = this.enhancedVideos.get(v);
-              if (data) {
-                data.y = Math.max(-200, (data.y || 0) - 10);
-                this.applyTransform(v);
-                const cp = v.closest('article, div[role="presentation"]')?.querySelector('.ive-control-panel') || v.parentElement.querySelector('.ive-control-panel');
-                const posY = cp?.querySelector('.ive-pos-y');
-                if (posY) posY.value = data.y;
-              }
+          // Move up (decrease Y position)
+          if (this.activeVideo) {
+            const videoData = this.enhancedVideos.get(this.activeVideo);
+            if (videoData) {
+              videoData.y = Math.max(-200, videoData.y - 10);
+              this.applyTransform(this.activeVideo);
+              this.updatePositionUI(this.activeVideo);
+              console.log('MaxiReel: Moved up, Y position:', videoData.y);
             }
           }
           break;
+
         case 'd':
-          // Move down (increase Y)
-          e.preventDefault();
-          {
-            const v = this.getActiveVideo();
-            if (v) {
-              const data = this.enhancedVideos.get(v);
-              if (data) {
-                data.y = Math.min(200, (data.y || 0) + 10);
-                this.applyTransform(v);
-                const cp = v.closest('article, div[role="presentation"]')?.querySelector('.ive-control-panel') || v.parentElement.querySelector('.ive-control-panel');
-                const posY = cp?.querySelector('.ive-pos-y');
-                if (posY) posY.value = data.y;
-              }
+          // Move down (increase Y position)
+          if (this.activeVideo) {
+            const videoData = this.enhancedVideos.get(this.activeVideo);
+            if (videoData) {
+              videoData.y = Math.min(200, videoData.y + 10);
+              this.applyTransform(this.activeVideo);
+              this.updatePositionUI(this.activeVideo);
+              console.log('MaxiReel: Moved down, Y position:', videoData.y);
             }
           }
           break;
